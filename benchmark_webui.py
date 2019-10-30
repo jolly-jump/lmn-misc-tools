@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#
+# Copyright 2019 Tobias Küchel <devel@zukuul.de>
+# This piece of software is licensed under:
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+
 import requests, json, argparse
 
 formatpretty=True
