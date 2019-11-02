@@ -61,9 +61,9 @@ Create a list for the german CS competition "Informatik Biber" from the sophomor
 - start ``sophomorix-print`` and copy the resulting file ``cp /var/lib/sophomorix/print-data/add-unknown_WebUntis-unix.csv  ./add.csv``
 
 Run like this
-``
+```
 ./informatik-biber-create-list.py "prefix-"
-``
+```
 and answer the questions
 - which classname belongs to which grade:
 ```
