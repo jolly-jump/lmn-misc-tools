@@ -1,2 +1,81 @@
 # lmn-misc-tools
 Miscellaneous tools for lmn v7
+
+Clone the repository
+```
+git clone https://github.com/jolly-jump/lmn-misc-tools.git
+cd lmn-misc-tools
+```
+
+## linuxmuster-client-fixpermissions.sh
+
+Run like this
+```
+./linuxmuster-client-fixpermission.sh
+```
+
+whenever you tampered with the directory under
+``/srv/linbo/linuxmuster-client/bionic`` to make sure the client can
+download all the files and ``~``-Files are deleted.
+
+## benchmark_webui.py
+
+Run like this (e.g.) on the server:
+```
+for i in `seq 10` ; do time ./benchmark_webui.py -u schuelte -p 'geheim!' >/dev/null 2>&1 &  done
+```
+
+to simulate ten login processes in the WebUI.
+- install ``pygments`` module to have pretty printed output
+- usage: 
+```
+usage: benchmark_webui.py [-h] [-s SERVERURL] [-v] -u USER -p PASSWORD
+
+Test the login process of the WebUI. Login, retrieve identity, retrieve quota,
+measure time.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -s SERVERURL, --serverurl SERVERURL
+                            Server URL to use, defaults to "https://server"
+  -v, --verbose         Show the output of Identity and Quota retrieval
+  -u USER, --user USER  Username to use for login
+  -p PASSWORD, --password PASSWORD
+                        Password to use for login
+```
+
+## workaround_enable_studentlogin.sh
+
+run like this
+```
+./workaround_enable_studentlogin.sh
+```
+whenever you upgraded linuxmuster-webui7 package, in order to allow
+students to login to the Schulkonsole/WebUI.
+
+## informatik-biber-create-list.py
+
+Create a list for the german CS competition "Informatik Biber" from the sophomorix-export.
+
+- install gender_guesser ``pip3 install gender_guesser``
+- start ``sophomorix-print`` and copy the resulting file ``cp /var/lib/sophomorix/print-data/add-unknown_WebUntis-unix.csv  ./add.csv``
+
+Run like this
+``
+./informatik-biber-create-list.py
+``
+and answer the questions
+- which classname belongs to which grade:
+```
+...
+biberklasse => None : ok? oder andere Stufe eingeben. (Enter, 0-13)
+k2 => 13 : ok? oder andere Stufe eingeben. (Enter, 0-13)12
+...
+```
+- which gender a user has that could not be guessed:
+```
+10a 10 Jascha Müller mostly_male
+Give gender on commandline m or f: m
+```
+
+- upload the resulting file ``schueler.biber.csv`` to the competition
