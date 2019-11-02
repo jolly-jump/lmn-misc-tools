@@ -37,7 +37,7 @@ measure time.
 optional arguments:
   -h, --help            show this help message and exit
   -s SERVERURL, --serverurl SERVERURL
-                            Server URL to use, defaults to "https://server"
+                        Server URL to use, defaults to "https://server"
   -v, --verbose         Show the output of Identity and Quota retrieval
   -u USER, --user USER  Username to use for login
   -p PASSWORD, --password PASSWORD
@@ -62,7 +62,7 @@ Create a list for the german CS competition "Informatik Biber" from the sophomor
 
 Run like this
 ``
-./informatik-biber-create-list.py
+./informatik-biber-create-list.py "prefix-"
 ``
 and answer the questions
 - which classname belongs to which grade:
@@ -79,3 +79,20 @@ Give gender on commandline m or f: m
 ```
 
 - upload the resulting file ``schueler.biber.csv`` to the competition
+
+complete usage:
+```
+usage: informatik-biber-create-list.py [-h] [-d] prefix
+
+Create logins for the Informatik Biber with usernames and passwords, using a
+given prefix
+
+positional arguments:
+  prefix                Prefix for all usernames
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -d, --dont-ask-gender
+                        Skip asking questions about the gender, results in
+                        anonym for all unknown gender types
+```						    
