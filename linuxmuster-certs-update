@@ -1,0 +1,113 @@
+#!/bin/sh
+# Copyright 2019 Tobias Küchel <devel@zukuul.de>
+# This piece of software is licensed under:
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+#
+# assume the following:
+# - fullchain.pem and key.pem contain all we need, they are created on some $le_host via LE-mechanism (e.g. linuxmuster-dehydrated)
+# - you have passwordless access to the le_host
+le_host=docker
+# - the path on the le_host is $le_hostpath/$domain/*.pem for each $domain
+le_hostpath=/srv/docker/nginx/certs
+# - the target is here on the server, were the certificates are kept
+#TARGETDIR=/etc/ssl/private # standard path in v6.x linuxmuster.net-installation
+#TARGETDIR=/etc/linuxmuster/ssl # standard path in v7 linuxmuster.net-installation
+TARGETDIR=/etc/linuxmuster/ssl/le_store
+mkdir -p $TARGETDIR
+
+###############################################
+# define a maindomain and a targetcert name then call the copy-function
+# the targetcert will be a bundle of fullchain.pem and key.pem
+#maindomain=server.meine-schule.de
+#targetcert=server.bundle.pem
+#copy_cert_if_different
+
+# define a timestamp
+TIMESTAMP=$(date +%s)
+
+function copy_cert_if_different {
+    chain=${le_hostpath}/${maindomain}/fullchain.pem
+    key=$(dirname $chain)/key.pem
+    copied=0
+    echo "$maindomain: "
+    tmp=$(mktemp) #empty tmp-files
+    tmp2=$(mktemp)
+
+    ## fetch key and chainfile from le_host
+    scp ${le_host}:$key $tmp
+    scp ${le_host}:$chain $tmp2
+
+    if [ -s $tmp -a -s $tmp2 ]; then   # exists and not empty
+	echo >> $tmp  # since they do not end with a newline
+	cat $tmp2 >> $tmp
+	if ! diff $TARGETDIR/$targetcert $tmp >/dev/null; then
+	    echo "   + Sichere altes Zertifikat"
+	    cp -a $TARGETDIR/$targetcert $TARGETDIR/${targetcert}_$TIMESTAMP
+	    echo "   + Kopiere neues Zertifikat nach $TARGETDIR"
+	    cp $tmp $TARGETDIR/$targetcert
+	    
+	    chmod 0640 $TARGETDIR/$targetcert
+	    chown root:ssl-cert $TARGETDIR/$targetcert
+
+	    copied=1
+	else
+	    echo "  -- keine Differenz zwischen Zertifikaten"
+	fi
+    else
+	echo "either $chain and $key were not copied from $le_host or it is empty!!"
+    fi
+    rm -f $tmp $tmp2
+    return $copied
+}
+
+### Beispiel v6.2
+maindomain=server.meine-schule.de 
+targetcert=server.bundle.pem
+copy_cert_if_different
+if [ $? -eq 1 ] ; then
+    echo "   + cp to standard dir"
+    cp $TARGETDIR/$targetcert /etc/linuxmuster/ssl/server.pem
+    echo "   + Restart services"
+    service apache2 reload
+    service slapd restart
+    service cyrus-imapd reload
+    echo "   + Copy to ipfire, restart pound there"
+    rsync -avP $TARGETDIR/$targetcert ipfire:/etc/ssl/certs/server.pem
+    ssh ipfire /etc/init.d/pound restart
+fi    
+
+### Beispiel v7
+maindomain=server.meine-schule.de
+targetcert=server.bundle.pem
+copy_cert_if_different
+if [ $? -eq 1 ] ; then
+    echo "   + Restart services"
+    cp $TARGETDIR/$targetcert /etc/linuxmuster/ssl/server.cert.bundle.pem
+    systemctl restart linuxmuster-webui
+fi    
+
+### Beispiel externe Nextcloud
+maindomain=cloud.meine-schule.de
+targetcert=cloud.pem
+copy_cert_if_different
+if [ $? -eq 1 ] ; then
+    echo "   + Copy to cloudhost, restart apache2 there"
+    rsync -avP $TARGETDIR/$targetcert cloud:/etc/ssl/private/server.pem
+    ssh cloud service apache2 restart
+fi
+
+### Beispiel externer Gitlab-Server
+maindomain=git.meine-schule.de
+targetcert=git.pem
+copy_cert_if_different
+if [ $? -eq 1 ] ; then
+    echo "   + Copy to gitlab host, restart gitlab there..."
+    rsync -avP $TARGETDIR/$targetcert gitlab:/etc/gitlab/ssl/$maindomain.key
+    rsync -avP $TARGETDIR/$targetcert gitlab:/etc/gitlab/ssl/$maindomain.crt
+    ssh gitlab gitlab-ctl restart 
+fi
+
+
+
+
