@@ -95,4 +95,13 @@ optional arguments:
   -d, --dont-ask-gender
                         Skip asking questions about the gender, results in
                         anonym for all unknown gender types
-```						    
+```
+
+## linuxmuster-certs-update
+
+See inside script how to configure it
+Run like this on the server:
+```
+./linuxmuster-certs-update
+```
+or copy it to ``/etc/cron.daily`` for daily checkup
