@@ -106,7 +106,12 @@ if [ -z "$1" ]; then
     done
     for vm in ${inputvms[@]}; do
 	lvs["$vm"]=${defaultlvs[$vm]}
-	fullbackup
     done
+    fullbackup
+    exit 0
+else
+    usage
+    exit 1
 fi
+
 
