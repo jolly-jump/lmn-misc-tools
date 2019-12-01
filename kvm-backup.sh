@@ -57,7 +57,7 @@ function fullbackup() {
     for vm in "${!lvs[@]}"; do
 	for lv in ${lvs[$vm]}; do
 	    echo -n "Trying to create snapshot on $lv ... "
-	     lvcreate -s $lv -l 20%ORIGIN -n $(basename ${lv})-backup >/dev/null
+	    lvcreate -s $lv -l 20%ORIGIN -n $(basename ${lv})-backup >/dev/null
 	    echo "RC: $?"
 	done
     done
@@ -74,7 +74,9 @@ function fullbackup() {
 	    # interactive version: -p
 	    time qemu-img convert -c -p -O qcow2 ${lv}-backup $target/${base}_${BDATE}.qcow2
 	    ln -sf ${base}_${BDATE}.qcow2 $target/${base}_latest.qcow2
-	    lvremove ${lv}-backup -y
+	    echo "RC: $?"
+	    echo -n "Trying to remove snapshot on $lv ... "
+	    lvremove ${lv}-backup -y >/dev/null
 	    echo "RC: $?"
 	done
     done
