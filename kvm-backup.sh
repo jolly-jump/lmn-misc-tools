@@ -57,13 +57,13 @@ function fullbackup() {
     for vm in "${!lvs[@]}"; do
 	for lv in ${lvs[$vm]}; do
 	    echo -n "Trying to create snapshot on $lv ... "
-	     lvcreate -s $lv -l 20%ORIGIN -n $(basename ${lv})-backup
+	     lvcreate -s $lv -l 20%ORIGIN -n $(basename ${lv})-backup >/dev/null
 	    echo "RC: $?"
 	done
     done
     for vm in "${!lvs[@]}"; do
 	echo -n "Starting $vm ... "
-	virsh start $vm
+	virsh start $vm >/dev/null
 	echo "RC: $?"
     done
     export BDATE=$(date +%Y_%m_%d_%H_%M)
@@ -71,10 +71,11 @@ function fullbackup() {
 	for lv in ${lvs[$vm]}; do
 	    echo -n "Trying to create fullbackup of $lv ... "
 	    base=$(basename ${lv})
-	    time qemu-img convert -O qcow2 ${lv}-backup $target/${base}_${BDATE}.qcow2
-	    ln -sf $target/${base}_${BDATE}.qcow2 $target/${base}_latest.qcow2
+	    # interactive version: -p
+	    time qemu-img convert -c -p -O qcow2 ${lv}-backup $target/${base}_${BDATE}.qcow2
+	    ln -sf ${base}_${BDATE}.qcow2 $target/${base}_latest.qcow2
 	    lvremove ${lv}-backup -y
-	    echo -n
+	    echo "RC: $?"
 	done
     done
 }
