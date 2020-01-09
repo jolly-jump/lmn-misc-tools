@@ -105,3 +105,20 @@ Run like this on the server:
 ./linuxmuster-certs-update
 ```
 or copy it to ``/etc/cron.daily`` for daily checkup
+
+## patch_linbo_postsync_on_start_hack.sh
+
+Patch LINBO to execute the postsync-script when using "Start" without
+sync or new. Makes sense if you want to set time, sync Windows
+activation or other things even when starting without sync.
+
+Run like this on the server
+```
+./patch_linbo_postsync_on_start_hack.sh
+```
+to patch the command update-linbofs and linbo_cmd. After that you have to execute
+```
+update-linbofs
+```
+to regenerate the LINBO system. Clients will now respect the
+PostOnStart=yes option when started via LINBO.
