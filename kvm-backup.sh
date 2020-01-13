@@ -26,6 +26,53 @@ function print_todo_list(){
 	echo 
     done
 }
+## zero every partition on every LV on every VM, if the partition can be mounted
+function zero_lvs() {
+    #declare -p lvs
+    for vm in "${!lvs[@]}"; do
+	for lv in ${lvs[$vm]}; do
+	    echo "Cracking open $lv: "
+	    kpartx -av "$lv"
+	    mapperlink=""
+	    for i in /dev/mapper/*; do
+		if [ $(readlink -f $i) = $(readlink -f "$lv") ]; then
+		    ## first correct link found will be used:
+		    mapperlink=$i;
+		    break
+		fi
+	    done
+	    [ -z $mapperlink ] && { echo "No partitions found. Skipping $lv"; kpartx -dv "$lv" ; continue ; }
+	    for part in ${mapperlink}*; do
+		## not ${mapperlink} itself
+		[ "$part" = "${mapperlink}" ] && continue
+		local tmpd=$(mktemp -d)
+		mount $part ${tmpd}
+		if [ $? -eq 0 ]; then
+		    if [ -n "$(ls -A $tmpd 2>/dev/null)" ]; then ## non-empty partition
+			c=0 RC=0
+			echo -n "Filling $part by GBs: "
+			while [ $RC -eq 0 ] ; do
+			    c=$((c+1))
+			    echo -n "."
+			    dd if=/dev/zero of=$tmpd/zero.$c bs=512 count=2000000 >/dev/null 2>/dev/null
+			    RC=$?
+			done
+			echo "full. Removing zerofiles."
+			rm -f $tmpd/zero.*
+		    else ## empty partition
+			echo "Partition seems empty. Refusing to fill it."
+		    fi
+		    umount $tmpd 2>/dev/null || { echo "Error: $part failed to umount. You need to fix this now. Exiting."; exit 2; }
+		else
+		    echo "Partition $part could not be mounted, skipping."
+		fi
+		rmdir $tmpd
+	    done
+	    echo "Reassembling $part"
+	    kpartx -dv "$lv" || { echo "Error: $lv failed to reassemble. You need to fix this now. Exiting."; exit 2; }
+	done
+    done
+}
 ## List running domains.
 function list_running_domains() {
     virsh domstate $1 | grep "shut off"
@@ -36,7 +83,7 @@ function try_shutdown_vms() {
     # returns 2 if vm was already down
     # exits with 1 on timeout
     # returns -1 on other error
-    declare -p lvs
+    #declare -p lvs
     for vm in "${!lvs[@]}"; do
 	echo -n "Trying to shutdown $vm ... "
 	test -n "$(list_running_domains ${vm} )"  && { echo -n "${vm} already down. Ok." ; echo "RC: 2" ; continue; }
@@ -66,6 +113,7 @@ function fullbackup() {
     echo "Backing up: "
     #declare -p lvs
     try_shutdown_vms
+    zero_lvs
     make_snapshot
     start_vms
     export BDATE=$(date +%Y_%m_%d_%H_%M)
@@ -80,7 +128,7 @@ function fullbackup() {
 	done
     done
 }
-
+## make a snapshot of all LVs of all VMs
 function make_snapshot() {
     #declare -p lvs
     for vm in "${!lvs[@]}"; do
@@ -91,6 +139,7 @@ function make_snapshot() {
 	done
     done
 }
+## remove the snapshots
 function remove_snapshot() {
     #declare -p lvs
     for vm in "${!lvs[@]}"; do
@@ -101,6 +150,7 @@ function remove_snapshot() {
 	done
     done
 }
+## merge the snapshots, i.e. go back to the state before the snapshot was taken
 function merge_snapshot() {
     #declare -p lvs
     try_shutdown_vms
@@ -149,6 +199,7 @@ if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
     exit 2
 fi
 eval set -- "$PARSED"
+set +e
 b=n s=- v=n c=kvm-config.sh
 # now enjoy the options in order and nicely split until we see --
 while true; do
@@ -225,7 +276,7 @@ if [ "$b" = "y" ]; then
     echo 
     print_configured
     print_todo_list
-    echo fullbackup 
+    fullbackup 
     exit 0
 fi
 
