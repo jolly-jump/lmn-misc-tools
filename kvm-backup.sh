@@ -144,7 +144,7 @@ function remove_snapshot() {
     #declare -p lvs
     for vm in "${!lvs[@]}"; do
 	for lv in ${lvs[$vm]}; do
-	    echo -n "Trying to create snapshot on $lv ... "
+	    echo -n "Trying to remove snapshot on $lv ... "
 	    lvremove ${lv}-backup -y
 	    echo "RC: $?"
 	done
@@ -180,6 +180,7 @@ function usage(){
     echo "-b, --backup           create a fullbackup"
     echo
     echo "after reading the config, the following VMs and LVs are defined"
+    source $c
     for vm in  "${!defaultlvs[@]}"; do
 	echo $vm --- ${defaultlvs[$vm]};
     done
