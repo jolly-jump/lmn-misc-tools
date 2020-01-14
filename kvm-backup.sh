@@ -26,6 +26,19 @@ function print_todo_list(){
 	echo 
     done
 }
+## fill directory given as parameter
+function fill_zeros(){
+    tmpd=$1
+    c=0 RC=0
+    echo -n "Filling $part by GBs: "
+    while [ $RC -eq 0 ] ; do
+	c=$((c+1))
+	echo -n "."
+	dd if=/dev/zero of=$tmpd/zero.$c bs=512 count=2000000 >/dev/null 2>/dev/null
+	RC=$?
+    done
+    echo "full. Removing zerofiles."
+}
 ## zero every partition on every LV on every VM, if the partition can be mounted
 function zero_lvs() {
     #declare -p lvs
@@ -49,16 +62,8 @@ function zero_lvs() {
 		mount $part ${tmpd}
 		if [ $? -eq 0 ]; then
 		    if [ -n "$(ls -A $tmpd 2>/dev/null)" ]; then ## non-empty partition
-			c=0 RC=0
-			echo -n "Filling $part by GBs: "
-			while [ $RC -eq 0 ] ; do
-			    c=$((c+1))
-			    echo -n "."
-			    dd if=/dev/zero of=$tmpd/zero.$c bs=512 count=2000000 >/dev/null 2>/dev/null
-			    RC=$?
-			done
-			echo "full. Removing zerofiles."
-			rm -f $tmpd/zero.*
+			time fill_zeros ${tmpd}
+			rm -f ${tmpd}/zero.*
 		    else ## empty partition
 			echo "Partition seems empty. Refusing to fill it."
 		    fi
@@ -122,7 +127,7 @@ function fullbackup() {
 	    echo -n "Trying to create fullbackup of $lv ... "
 	    base=$(basename ${lv})
 	    time qemu-img convert -c -O qcow2 ${lv}-backup $target/${base}_${BDATE}.qcow2
-	    ln -sf $target/${base}_${BDATE}.qcow2 $target/${base}_latest.qcow2
+	    ln -sf ${base}_${BDATE}.qcow2 $target/${base}_latest.qcow2
 	    lvremove ${lv}-backup -y
 	    echo -n
 	done
