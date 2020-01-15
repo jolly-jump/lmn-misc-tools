@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 2019 Tobias Küchel <devel@zukuul.de>
+# Copyright 2019,2020 Tobias Küchel <devel@zukuul.de>
 # This piece of software is licensed under:
 # SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -7,6 +7,9 @@ declare -A lvs
 declare -A defaultlvs
 TIMEOUT=120
 target=/srv/backup
+
+## determined if this script is sourced
+(return 0 2>/dev/null) && sourced=1 || sourced=0
 
 ## print all preconfigured VMs and LVs
 function print_configured() {
@@ -67,14 +70,14 @@ function zero_lvs() {
 		    else ## empty partition
 			echo "Partition seems empty. Refusing to fill it."
 		    fi
-		    umount $tmpd 2>/dev/null || { echo "Error: $part failed to umount. You need to fix this now. Exiting."; exit 2; }
+		    umount $tmpd 2>/dev/null || { echo "Error: $part failed to umount. You need to fix this now. Exiting."; [[ $sourced -eq 1 ]] && return 2 || exit 2; }
 		else
 		    echo "Partition $part could not be mounted, skipping."
 		fi
 		rmdir $tmpd
 	    done
 	    echo "Reassembling $part"
-	    kpartx -dv "$lv" || { echo "Error: $lv failed to reassemble. You need to fix this now. Exiting."; exit 2; }
+	    kpartx -dv "$lv" || { echo "Error: $lv failed to reassemble. You need to fix this now. Exiting."; [[ $sourced -eq 1 ]] && return 2 || exit 2;}
 	done
     done
 }
@@ -101,7 +104,7 @@ function try_shutdown_vms() {
 	    test -n "$(list_running_domains ${vm} )" && { echo "RC: 0"; break ; }
 	    sleep 1
 	done
-	test -z "$(list_running_domains ${vm} )" && { echo -n "Error: ${vm} failed to shutdown. Exiting." ; exit 1; }
+	test -z "$(list_running_domains ${vm} )" && { echo -n "Error: ${vm} failed to shutdown. Exiting." ;  [[ $sourced -eq 1 ]] && return 1 || exit 1; }
     done
 }
 ## start VMs
@@ -193,7 +196,6 @@ function usage(){
     echo ""
 }
 
-
 ### +++ COMMAND LINE parameter parsing and logic +++
 # https://stackoverflow.com/a/29754866
 set -o errexit -o pipefail -o noclobber -o nounset
@@ -202,10 +204,10 @@ LONGOPTS=config:,backup,snapshot:,verbose
 ! PARSED=$(getopt --options=$OPTIONS --longoptions=$LONGOPTS --name "$0" -- "$@")
 if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
     usage
-    exit 2
+    [[ $sourced -eq 1 ]] && return 2 || exit 2
 fi
 eval set -- "$PARSED"
-set +e
+set +e +C +u
 b=n s=- v=n c=kvm-config.sh
 # now enjoy the options in order and nicely split until we see --
 while true; do
@@ -226,20 +228,25 @@ while true; do
 	    shift; break
 	    ;;
 	*)
-	    echo "Programming error"; exit 3
+	    echo "Programming error";
+	    [[ $sourced -eq 1 ]] && return 3 || exit 3
 	    ;;
     esac
 done
 
-if [ "$b" = "n" -a "$s" = "-" -o "$b" = "y" -a "$s" != "-" ]; then
-    echo "Error: neither -s nor -b or both was/were entered."
-    usage
-    exit 1
+## get default values from configuration
+source $c
+
+## we are called from shell
+if [ $sourced -eq 0 ]; then 
+    if [ "$b" = "n" -a "$s" = "-" -o "$b" = "y" -a "$s" != "-" ]; then
+	echo "Error: neither -s nor -b or both was/were entered."
+	usage
+	exit 1
+    fi
 fi
 
 ## +++ Assemble the todo list +++
-## get default values from configuration
-source $c
 ## ask or read which VMs to use, save in inputvms array
 declare -a inputvms
 if [ $# -eq 0 ]; then  ## no VMs on the command line, ask interactively
@@ -248,7 +255,7 @@ if [ $# -eq 0 ]; then  ## no VMs on the command line, ask interactively
     read -a inputvms
     if [ -z ${inputvms[@]} ]; then
 	echo "No VM entered, exiting."
-	exit 0
+	[[ $sourced -eq 1 ]] && return 0 || exit 0 
     fi
 else  ## VMs seem to be given on the command line
     while [[ $# -ne 0 ]]; do
@@ -261,7 +268,7 @@ for vm in ${inputvms[@]}; do
     if [ "$vm" != "all" ]; then
 	if [[ ! " ${!defaultlvs[@]} " =~ " ${vm} " ]]; then
 	    echo "Error: $vm is not defined. Only VMs and their LVs defined by $c are allowed."
-	    exit 1
+	    [[ $sourced -eq 1 ]] && return 1 || exit 1
 	fi
     fi
 done
@@ -275,6 +282,7 @@ for vm in ${inputvms[@]}; do
 	lvs["$vm"]=${defaultlvs[$vm]}
     fi
 done
+
     
 ### +++ BACKUP
 if [ "$b" = "y" ]; then
@@ -283,7 +291,7 @@ if [ "$b" = "y" ]; then
     print_configured
     print_todo_list
     fullbackup 
-    exit 0
+    [[ $sourced -eq 1 ]] && return 0 || exit 0
 fi
 
 ### +++ SNAPSHOT
@@ -298,11 +306,9 @@ if [ "$s" != "-" ]; then
 	merge_snapshot
     else
 	echo "$s" no valid snapshot command.
-	exit 1
+	[[ $sourced -eq 1 ]] && return 1 || exit 1
     fi
     exit 0
 fi
 
-### +++ never reach this
-echo "Programming error"
-exit 3
+
