@@ -29,9 +29,11 @@ function print_todo_list(){
 	echo 
     done
 }
-## fill directory given as parameter
+## fill directory given as parameter in partition given as second parameter
 function fill_zeros(){
+    [ -z "$1" -o -z "$2" ] && { echo "usage: fill_zeros dir part"; return 1; }
     tmpd=$1
+    part=$2
     c=0 RC=0
     echo -n "Filling $part by GBs: "
     while [ $RC -eq 0 ] ; do
@@ -41,6 +43,7 @@ function fill_zeros(){
 	RC=$?
     done
     echo "full. Removing zerofiles."
+    rm -f ${tmpd}/zero.*
 }
 ## zero every partition on every LV on every VM, if the partition can be mounted
 function zero_lvs() {
@@ -65,8 +68,7 @@ function zero_lvs() {
 		mount $part ${tmpd}
 		if [ $? -eq 0 ]; then
 		    if [ -n "$(ls -A $tmpd 2>/dev/null)" ]; then ## non-empty partition
-			time fill_zeros ${tmpd}
-			rm -f ${tmpd}/zero.*
+			time fill_zeros ${tmpd} ${part}
 		    else ## empty partition
 			echo "Partition seems empty. Refusing to fill it."
 		    fi
