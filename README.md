@@ -189,16 +189,24 @@ Run like this on the server
 ```
 ./check_room.sh r015
 r015-pc01: offline, maybe?
-r015-pc02: LINBO
-linbo status: initcache
-r015-pc03: LINBO
-linbo status: syncing
-r015-pc04: LINBO
-linbo status: idle
+r015-pc02: <uptime>
+LINBO status: initcache
+r015-pc03: <uptime info>
+LINBO status: syncing
+r015-pc04: <uptime info>
+LINBO status: idle
 r015-pc05: bionic
-linux status: user (asdf) logged in since ...
+Linux status: username   tty7     2020-02-01 14:00 (:0)
 r015-pc06: bionic
-linux status: idle
+Linux status: idle
 r015-pc07: neither LINBO nor Linux, not a PC?
 ```
-where you see the different possible outputs, depending how the machine reacts
+where you see the different possible outputs, depending how the machine reacts.
+
+- LINBO: uptime info is shown, then status
+  - idle (not booting, not syncing, possibly seeding as torrent)
+  - initcache (initcache is running)
+  - syncing (the sync after initcache is running, possibly booting soon)
+  
+- Linuxclient: imagename is shown if no empty /.linbo, then
+  - information "who" is logged in
