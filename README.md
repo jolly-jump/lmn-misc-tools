@@ -171,3 +171,34 @@ data="/srv/nextcloud/data"
 ## list of directories on $data/ which should not be considered for deletion
 excludelist="(appdata|files_external|rainloop|__groupfolders|updater-|vplan|plan)" 
 ```
+
+##  50-create-etc-hosts-rooms
+
+Create files of the form ``/etc/hosts.room`` on the server, where room can be any string. Configure the script to your needs.
+
+Run like this on the server
+```
+./50-create-etc-hosts-rooms
+```
+
+## check_room.sh
+
+Show the status of every host in ``/etc/hosts.room``,  where room is given on the command line.
+
+Run like this on the server
+```
+./check_room.sh r015
+r015-pc01: offline, maybe?
+r015-pc02: LINBO
+linbo status: initcache
+r015-pc03: LINBO
+linbo status: syncing
+r015-pc04: LINBO
+linbo status: idle
+r015-pc05: bionic
+linux status: user (asdf) logged in since ...
+r015-pc06: bionic
+linux status: idle
+r015-pc07: neither LINBO nor Linux, not a PC?
+```
+where you see the different possible outputs, depending how the machine reacts

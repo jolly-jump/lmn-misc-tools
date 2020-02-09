@@ -1,0 +1,32 @@
+#!/bin/bash
+# Copyright pre 2019 Jesko Anschütz (anschuetz@linuxmuster.net)
+# Copyright 2019,2020 Tobias Küchel <devel@zukuul.de>
+# This piece of software is licensed under:
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+# EXCLUDE="(^#|none|switch|drucker|serverraum|test|verw|mobil|esxi)"
+# Default: nur Kommentarzeilen und leere Zeilen werden ausgeschlossen...
+EXCLUDE="(^#|^$)"
+
+echo "Extracting hostnames to /etc/hosts.<room>"
+declare -a rooms
+devices=/etc/linuxmuster/sophomorix/default-school/devices.csv
+
+## Step 1: Create /etc/hosts.$room by using the first entry in devices.csv (aka workstations)
+rooms=( r219 r202 r302 rl r014 r015 r016 )
+echo -n " - "
+for room in "${rooms[@]}" ; do
+    egrep -v -e"$EXCLUDE" $devices | grep "^$room;" | awk -F\; '{print $2}' > /etc/hosts.$room
+    echo -n "$room, "
+done
+echo
+
+## Step 2: Create more /etc/hosts.room manually:
+echo "idle
+chapman
+booth
+gilliam
+jones
+clay
+" > /etc/hosts.vm
+
