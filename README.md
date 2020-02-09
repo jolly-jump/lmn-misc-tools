@@ -122,3 +122,52 @@ update-linbofs
 ```
 to regenerate the LINBO system. Clients will now respect the
 PostOnStart=yes option when started via LINBO.
+
+
+## kvm-backup.sh
+
+Manage full backups and snapshots of all configured Servers with their logical volumes.
+
+Run like this on the server
+```
+./kvm-backup --help
+usage: ./kvm-backup.sh OPTIONS [all | name1 [name2] ... ]
+Creates a full backup of logical volumes of virtual machines given by names or ask interactively
+One of -s or -b is mandatory but exclude each other
+
+Possible options:
+-c, --config=filename  use the filename as configfile instead of kvm-config.sh in the current directory
+[-v, --verbose          be verbose] not implemented
+-s, --snapshot=cmd     cmd may be: make, remove, merge
+                       make - create snapshots of the lvs used by the VM
+                         remove - remove the snapshots of the LVS used by the VM
+                         merge - merge the snapshots (go back to the state before the snapshots were made)
+-b, --backup           create a fullbackup
+
+after reading the config, the following VMs and LVs are defined
+lmn7-opnsense --- /dev/vghost/lmn7-opnsense
+lmn7-server --- /dev/vghost/lmn7-serverroot /dev/vghost/lmn7-serverdata
+backup target: /srv/backup
+```
+the usage help is hopefully self-explanatory. The above output is generated if you put a configuration file in place like the kvm-config.sh file in the repo.
+
+## update_clouddata.sh
+
+Aktualisiert die Cloud-Userdatenbank in dem es User löscht, die es im LDAP/AD nicht mehr gibt.
+
+Run like this on the server
+```
+./update_clouddata.sh
+```
+but make sure you configure the script to your needs, e.g.
+
+```
+## no command line arguments: your cloudserver should be configured here:
+cloudserver="jones"
+## path to the occ command on the cloudserver
+occ="/opt/nextcloud/occ"
+## path to the data directory on the cloud server
+data="/srv/nextcloud/data"
+## list of directories on $data/ which should not be considered for deletion
+excludelist="(appdata|files_external|rainloop|__groupfolders|updater-|vplan|plan)" 
+```
