@@ -32,20 +32,17 @@ EOF
 cp /usr/share/linuxmuster/linbo/update-linbofs.sh /srv/linbo/my-update-linbofs.sh
 
 cat <<'EOF' | patch -u /srv/linbo/my-update-linbofs.sh -
---- /usr/share/linuxmuster/linbo/update-linbofs.sh      2020-01-09 16:25:41.704274561 +0100
-+++ /srv/linbo/my-update-linbofs.sh     2020-01-09 16:30:06.378266405 +0100
-@@ -86,7 +86,10 @@
- 
+--- /srv/linbo/my-update-linbofs.sh.orig        2020-02-18 12:15:00.111880139 +0100
++++ /srv/linbo/my-update-linbofs.sh     2020-02-18 12:15:57.369204003 +0100
+@@ -87,6 +87,9 @@
   # copy default start.conf
   cp -f $LINBODIR/start.conf .
-- 
-+
+ 
 + #postsynconstart
 + cp /srv/linbo/my_linbo_cmd $linbofscachedir/usr/bin/linbo_cmd
-+
-  # pack default linbofs${suffix}.lz again
-  find . | cpio --quiet -o -H newc | lzma -zcv > "$linbofs" ; RC="$?"
-  [ $RC -ne 0 ] && bailout "failed!"
++ 
+  # copy timezone info file
+  [ -n "$zi" -a -e "$zi" ] && cp -L "$zi" etc/localtime
 EOF
 
 
