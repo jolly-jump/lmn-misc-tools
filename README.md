@@ -187,19 +187,13 @@ Show the status of every host in ``/etc/hosts.room``,  where room is given on th
 
 Run like this on the server
 ```
-./check_room.sh r015
-r015-pc01: offline, maybe?
-r015-pc02: <uptime>
-LINBO status: initcache
-r015-pc03: <uptime info>
-LINBO status: syncing
-r015-pc04: <uptime info>
-LINBO status: idle
-r015-pc05: bionic
-Linux status: username   tty7     2020-02-01 14:00 (:0)
-r015-pc06: bionic
-Linux status: idle
-r015-pc07: neither LINBO nor Linux, not a PC?
+# ./check_room.sh r016
+r101-pc01: bionicmate, status: idle:  fahclie+ 19409 199 0.9 269696 39096 ? RNl
+r015-pc05: bionic, status: username   tty7     2020-02-01 14:00 (:0)
+r205-pc04: neither LINBO nor Linux, not a PC?
+r015-pc02: <uptime>, LINBO status: initcache
+r015-pc03: <uptime info>, LINBO status: syncing
+r015-pc04: <uptime info>, LINBO status: idle
 ```
 where you see the different possible outputs, depending how the machine reacts.
 
@@ -210,3 +204,6 @@ where you see the different possible outputs, depending how the machine reacts.
   
 - Linuxclient: imagename is shown if no empty /.linbo, then
   - information "who" is logged in
+  - ps of the top process using the CPU
+
+- show offline status explicitely by using `check_room.sh <room> --showoffline`
