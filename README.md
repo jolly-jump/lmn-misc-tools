@@ -46,13 +46,14 @@ optional arguments:
 
 ## workaround_enable_studentlogin.sh
 
+This script is obsolete from linuxmuster-webui7 1.0.147 onwards. Thanks Arnaud & Andreas!
+
 run like this
 ```
 ./workaround_enable_studentlogin.sh
 ```
 whenever you upgraded linuxmuster-webui7 package, in order to allow
 students to login to the Schulkonsole/WebUI.
-This script is obsolete from linuxmuster-webui7 1.0.147 onwards. Thanks Arnaud & Andreas!
 
 ## informatik-biber-create-list.py
 
