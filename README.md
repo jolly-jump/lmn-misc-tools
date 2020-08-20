@@ -208,3 +208,38 @@ where you see the different possible outputs, depending how the machine reacts.
   - ps of the top process using the CPU
 
 - show offline status explicitely by using `check_room.sh <room> --showoffline`
+
+
+## linuxmuster-upgrade-matrix.sh
+
+This script updates the master branch of
+https://github.com/spantaleev/matrix-docker-ansible-deploy.git using
+ansible in the docker-container devture/ansible:2.9.9-r0
+
+- assuming your TARGETDIR has the name of this script (without the .sh
+  ending), e.g. TARGETDIR=/root/linuxmuster-upgrade-matrix
+- assuming you have successfully set up the Matrix already and using
+  the git repository above.
+- assuming you have your own local branch "working-branch" where you
+  merge changes from the master branch if the master branch works for
+  you
+```
+# ./linuxmuster-upgrade-matrix.sh
+```
+will pull the master branch and show the diff to your own branch
+
+```
+# ./linuxmuster-upgrade-matrix.sh sss
+```
+will setup-all, stop and start the Matrix using the current master branch
+```
+# ./linuxmuster-upgrade-matrix.sh reset
+```
+will setup-all, stop and start the Matrix using your working-branch
+(assuming no irreversibel changes to the database have happened so
+far)
+```
+# ./linuxmuster-upgrade-matrix.sh [setup-all|start|stop|*]
+```
+will run the ansible script using your argument.
+

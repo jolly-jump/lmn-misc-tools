@@ -30,6 +30,7 @@ function print_todo_list(){
     done
 }
 ## fill directory given as parameter in partition given as second parameter
+## obsolete: replaced by "zerofree" tools
 function fill_zeros(){
     [ -z "$1" -o -z "$2" ] && { echo "usage: fill_zeros dir part"; return 1; }
     tmpd=$1
@@ -67,18 +68,20 @@ function zero_lvs() {
 		local tmpd=$(mktemp -d)
 		mount $part ${tmpd}
 		if [ $? -eq 0 ]; then
-		    if [ -n "$(ls -A $tmpd 2>/dev/null)" ]; then ## non-empty partition
-			time fill_zeros ${tmpd} ${part}
-		    else ## empty partition
-			echo "Partition seems empty. Refusing to fill it."
-		    fi
+		    #if [ -n "$(ls -A $tmpd 2>/dev/null)" ]; then ## non-empty partition
+		    #	time fill_zeros ${tmpd} ${part}
+		    #else ## empty partition
+		    #	echo "Partition seems empty. Refusing to fill it."
+		    #fi
 		    umount $tmpd 2>/dev/null || { echo "Error: $part failed to umount. You need to fix this now. Exiting."; [[ $sourced -eq 1 ]] && return 2 || exit 2; }
+		    time zerofree -v $part
 		else
 		    echo "Partition $part could not be mounted, skipping."
 		fi
 		rmdir $tmpd
 	    done
-	    echo "Reassembling $part"
+	    sleep 5
+	    echo "Reassembling $lv   "
 	    kpartx -dv "$lv" || { echo "Error: $lv failed to reassemble. You need to fix this now. Exiting."; [[ $sourced -eq 1 ]] && return 2 || exit 2;}
 	done
     done
@@ -136,6 +139,7 @@ function fullbackup() {
 	    lvremove ${lv}-backup -y
 	    echo -n
 	done
+	cp /etc/libvirt/qemu/${vm}.xml $target/${vm}_${BDATE}.xml
     done
 }
 ## make a snapshot of all LVs of all VMs
